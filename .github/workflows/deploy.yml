@@ -3,7 +3,7 @@ name: Deploy Static Site to S3 with CDK
 on:
   push:
     branches:
-      - master  
+      - main 
 
 jobs:
   deploy:
