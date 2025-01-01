@@ -1,17 +1,31 @@
-// import * as cdk from 'aws-cdk-lib';
-// import { Template } from 'aws-cdk-lib/assertions';
-// import * as Infra from '../lib/infra-stack';
+import { InfraStack } from '../lib/infra-stack';
+import { App } from 'aws-cdk-lib';
+import { Template } from 'aws-cdk-lib/assertions';
+import { jest } from '@jest/globals';
 
-// example test. To run these tests, uncomment this file along with the
-// example resource in lib/infra-stack.ts
-test('SQS Queue Created', () => {
-//   const app = new cdk.App();
-//     // WHEN
-//   const stack = new Infra.InfraStack(app, 'MyTestStack');
-//     // THEN
-//   const template = Template.fromStack(stack);
+// Mock the required classes and methods
+jest.mock('aws-cdk-lib/aws-s3-deployment', () => ({
+  BucketDeployment: jest.fn().mockImplementation(() => {}),  // Mock the constructor for BucketDeployment
+  Source: {
+    asset: jest.fn(() => 'mock-asset-path'),
+  },
+}));
 
-//   template.hasResourceProperties('AWS::SQS::Queue', {
-//     VisibilityTimeout: 300
-//   });
+test('S3 Bucket is created with correct website configuration and public access settings', () => {
+  const app = new App();
+  const stack = new InfraStack(app, 'InfraStack');
+  const template = Template.fromStack(stack);
+
+  // Check that the S3 bucket is configured correctly
+  template.hasResourceProperties('AWS::S3::Bucket', {
+    WebsiteConfiguration: {
+      IndexDocument: 'index.html',  // Ensure index.html is set as the entry point
+      ErrorDocument: 'index.html',  // Ensure error handling redirects to index.html for client-side routing
+    },
+    AccessControl: 'BucketOwnerFullControl', // Ensure full control for the bucket owner
+    PublicAccessBlockConfiguration: {
+      BlockPublicAcls: true,  // Ensure public ACLs are blocked for security
+      IgnorePublicAcls: true,  // Ensure ignoring of public ACLs for added security
+    },
+  });
 });
