@@ -1,4 +1,4 @@
-name: Deploy CDK Application
+name: Deploy Static Site to S3 with CDK
 
 on:
   push:
@@ -22,16 +22,29 @@ jobs:
       run: |
         npm install  # Install dependencies in the current directory
 
-    - name: Build application
+    - name: Run tests
       run: |
-        npm run build  # Run the build script defined in package.json
+        npm test || exit 1   # Run the test script defined in package.json
+
+    - name: Build Static Site
+      run: |
+        npm run build 
+
+    - name: Install infra dependencies
+      run: |
+        cd infra  # Navigate to your CDK project directory
+        npm install  # Install dependencies in the infra directory
   
-    - name: Deploy CDK
+    - name: Run infrastructure tests
+      run: |
+        cd infra  # Navigate to your CDK project directory
+        npm run test || exit 1  # Run the test script defined in package.json
+
+    - name: Deploy CDK Infrastructure
       env:
         AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
         AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-        AWS_DEFAULT_REGION: us-east-1  # Change to your desired region
+        AWS_DEFAULT_REGION: ap-south-1  # Change to your desired region
       run: |
         cd infra  # Navigate to your CDK project directory
-        npm install
         npx cdk deploy --require-approval never
